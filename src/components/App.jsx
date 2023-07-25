@@ -5,22 +5,25 @@ import { Filter } from './Filter/Filter';
 import { Component } from 'react';
 import { nanoid } from 'nanoid';
 
+import { loadPhoneBook, savePhoneBook } from './service/localstorage';
+
 class App extends Component {
   state = {
     contacts: [],
     filter: '',
   };
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
-  componentDidMount() {
-    const contactItem = localStorage.getItem('contacts');
-    const parsedContact = JSON.parse(contactItem);
 
-    this.setState({ contacts: parsedContact });
+  componentDidMount() {
+    this.setState({ contacts: loadPhoneBook() });
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    const prevContacts = prevState.contacts;
+    const thisContacts = this.state.contacts;
+    if (prevContacts.length !== thisContacts.length)
+      savePhoneBook(thisContacts);
+  }
+
   addContact = contact => {
     if (this.findContact(contact.name))
       return `${contact.name} is already in contacts`;
@@ -56,7 +59,6 @@ class App extends Component {
       <div className={css.container}>
         <h1 className={css.title}>Phonebook</h1>
         <ContactForm onSubmit={values => this.addContact(values)} />
-
         <h2 className={css.title}>Contacts</h2>
         <Filter filter={this.state.filter} handleChange={this.filterChange} />
         {this.state.contacts && (
